@@ -1,19 +1,38 @@
 // In App.js in a new project
 
-import * as React from 'react';
+import React,  { useState, useEffect } from 'react';
 import {View, Text, Button} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
+// import { auth } from "./Firebase";
 
-function HomeScreen({navigation}) {
+GoogleSignin.configure({
+  webClientId: '773206829548-g5ec8dn173ceophuv3a8op4nj92sn6o6.apps.googleusercontent.com',
+  
+});
+
+function LogInScreen({navigation}) {
+
+  const  onGoogleButtonPress = async() => {
+    //Get the users ID token
+   const { idToken } = await GoogleSignin.signIn();
+   console.log("Warren",idToken )
+  //   // Create a Google credential with the token
+  const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+  
+  //   // Sign-in the user with the credential
+return auth().signInWithCredential(googleCredential);
+  //
+ }
+ 
   return (
     <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
       <Text>Biim Ching Screen</Text>
       <Button
-        title="Press Me"
-        onPress={() => {
-          navigation.navigate('HomeDetails');
-        }}
+        title="Google"
+        onPress={() => onGoogleButtonPress().then(() => console.log('Signed in with Google!'))}
       />
     </View>
   );
@@ -26,13 +45,13 @@ function TestScreen({navigation}) {
     </View>
   );
 }
-function LogInScreen({navigation}) {
+function HomeScreen({navigation}) {
   return (
     <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-      <Text>Warren Ching Screen</Text>
+      <Text>Login Screen</Text>
       <Button
-        title="Log In"
-        onPress={() => console.log("press Test")}
+        title="Home"
+        onPress={() => navigation.navigate("HomeDetails")}
         
       />
     </View>
@@ -52,7 +71,20 @@ function HomeStack() {
 }
 
 function App() {
-  const user = "Warren"
+  const [initializing, setInitializing] = useState(true);
+  //const [user, setUser] = useState();
+  const user = null
+   // Handle user state changes
+   function onAuthStateChanged(user) {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
+  }, []);
+  console.log("User", user)
   return (
     <NavigationContainer>
       <Stack.Navigator>
